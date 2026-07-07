@@ -1,5 +1,6 @@
 package com.assasement.dummyShop.di
 
+import com.assasement.dummyShop.db.AppDatabase
 import com.assasement.dummyShop.network.ApiService
 import com.assasement.dummyShop.network.RetrofitProvider
 import com.assasement.dummyShop.repository.ProductRepository
@@ -18,7 +19,6 @@ val appKoinModule = module {
     single<ApiService> {
         RetrofitProvider.api
     }
-
     single {
         ProductRepository(get())
     }

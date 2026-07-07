@@ -10,7 +10,7 @@ import java.util.Locale
 
 interface ApiService {
 
-    @GET("products ")
+    @GET("products")
     suspend fun getProducts(
         @Query("limit") limit:Int,
         @Query("skip") skip:Int
