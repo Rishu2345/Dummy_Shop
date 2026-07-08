@@ -151,7 +151,7 @@ app/src/main/java/com/assasement/dummyShop/
 2. Open the project in Android Studio (**File → Open** → select the project root).
 3. Let Gradle sync finish (downloads dependencies automatically — no API keys or `local.properties` setup needed, since DummyJSON requires no auth).
 4. Run on an emulator or physical device (API 27+):
-   - Via Android Studio: click **Run ▶**
+   - Via Android Studio: click **Run **
    - Via command line:
      ```bash
      ./gradlew installDebug
