@@ -6,6 +6,7 @@ import com.assasement.dummyShop.network.ApiService
 import com.assasement.dummyShop.network.RetrofitProvider
 import com.assasement.dummyShop.repository.ProductRepository
 import com.assasement.dummyShop.viewModel.homeScreenViewModel.HomeViewModel
+import com.assasement.dummyShop.viewModel.productViewModel.ProductViewModel
 import com.assasement.dummyShop.viewModel.searchViewModels.SearchViewModel
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
@@ -35,4 +36,6 @@ val appKoinModule = module {
 
     viewModel { HomeViewModel(get()) }
     viewModel { SearchViewModel(get()) }
+    viewModel { ProductViewModel(get()) }
 }
+

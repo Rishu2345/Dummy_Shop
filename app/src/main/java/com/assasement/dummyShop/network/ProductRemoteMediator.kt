@@ -62,7 +62,7 @@ class ProductRemoteMediator(
 
             db.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    db.productDao().clearAll()
+//                    db.productDao().clearAll()
                     db.remoteKeysDao().clearByTag(queryTag)
                 }
                 val prevKey = if (skip == 0) null else skip - limit

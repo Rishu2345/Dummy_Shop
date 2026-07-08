@@ -24,6 +24,9 @@ interface ProductDao {
     @Query("SELECT * FROM products ORDER BY price DESC")
     fun pagingSourceSortedByPriceDesc(): PagingSource<Int, ProductEntity>
 
+    @Query("SELECT * FROM products WHERE id = :id LIMIT 1")
+    suspend fun getProductById(id: Int): ProductEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(products: List<ProductEntity>)
 

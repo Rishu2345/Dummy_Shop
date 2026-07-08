@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -44,6 +43,7 @@ import com.assasement.dummyShop.view.components.ErrorState
 import com.assasement.dummyShop.view.components.ProductCard
 import com.assasement.dummyShop.view.components.ProductSearchBar
 import com.assasement.dummyShop.view.components.SuggestionChip
+import com.assasement.dummyShop.view.home.appendFooter
 import com.assasement.dummyShop.viewModel.searchViewModels.SearchUiState
 import com.assasement.dummyShop.viewModel.searchViewModels.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -51,12 +51,13 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchScreen(
+    onProductClick: (Int) -> Unit,
     viewModel: SearchViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
     val results = viewModel.results.collectAsLazyPagingItems()
-    val focusRequester = FocusRequester()
+    val focusRequester = remember{FocusRequester()}
     val content = uiState as? SearchUiState.Content ?: SearchUiState.Content()
 
     LaunchedEffect(Unit) {
@@ -122,22 +123,11 @@ fun SearchScreen(
                                             isFavorite = product.id in favoriteIds,
                                             onFavoriteClick = { viewModel.toggleFavorite(product.id) },
                                             onAddClick = {},
+                                            onProductClick = { onProductClick(product.id) },
                                         )
                                     }
                                 }
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    when (results.loadState.append) {
-                                        is LoadState.Loading -> Row(
-                                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                            horizontalArrangement = Arrangement.Center,
-                                        ) { CircularProgressIndicator() }
-                                        is LoadState.Error -> Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center,
-                                        ) { TextButton(onClick = { results.retry() }) { Text("Retry") } }
-                                        else -> Unit
-                                    }
-                                }
+                                appendFooter(results)
                             }
                         }
                     }
@@ -192,3 +182,4 @@ private fun SearchSuggestions(
         }
     }
 }
+

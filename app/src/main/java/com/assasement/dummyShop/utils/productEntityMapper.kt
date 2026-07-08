@@ -25,5 +25,30 @@ fun Product.toEntity(): ProductEntity = ProductEntity(
     minimumOrderQuantity = minimumOrderQuantity,
     meta = meta,
     images = images,
-    thumbnail = thumbnail
+    thumbnail = thumbnail,
+)
+
+fun ProductEntity.toProduct(): Product = Product(
+    id = id,
+    title = title,
+    description = description,
+    category = category,
+    price = price,
+    discountPercentage = discountPercentage,
+    rating = rating,
+    stock = stock,
+    tags = tags,
+    brand = brand,
+    sku = sku,
+    weight = weight,
+    dimensions = dimensions,
+    warrantyInformation = warrantyInformation,
+    shippingInformation = shippingInformation,
+    availabilityStatus = availabilityStatus,
+    reviews = reviews,
+    returnPolicy = returnPolicy,
+    minimumOrderQuantity = minimumOrderQuantity,
+    meta = meta,
+    images = images,
+    thumbnail = thumbnail,
 )

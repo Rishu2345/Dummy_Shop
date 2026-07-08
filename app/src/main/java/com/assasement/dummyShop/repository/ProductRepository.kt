@@ -12,6 +12,8 @@ import com.assasement.dummyShop.model.Product
 import com.assasement.dummyShop.network.ApiService
 import com.assasement.dummyShop.network.ProductQuery
 import com.assasement.dummyShop.network.ProductRemoteMediator
+import com.assasement.dummyShop.utils.toEntity
+import com.assasement.dummyShop.utils.toProduct
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalPagingApi::class)
@@ -51,5 +53,13 @@ class ProductRepository(
 
     suspend fun getCategories(): List<Category> = api.getAllProductCategories()
 
-    suspend fun getProductDetail(id: Int): Product = api.getProductById(id)
+    suspend fun getProductDetail(id: Int): Product {
+        val cached = db.productDao().getProductById(id)
+        if (cached != null) return cached.toProduct()
+
+        val remote = api.getProductById(id)
+        db.productDao().insertAll(listOf(remote.toEntity()))
+        return remote
+    }
 }
+

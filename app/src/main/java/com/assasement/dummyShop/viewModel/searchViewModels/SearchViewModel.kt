@@ -58,7 +58,7 @@ class SearchViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState.Idle)
 
     val results: Flow<PagingData<ProductEntity>> = query
-        .debounce(300.milliseconds)
+        .debounce(500.milliseconds)
         .map { it.trim() }
         .distinctUntilChanged()
         .flatMapLatest { value ->

@@ -1,7 +1,10 @@
 package com.assasement.dummyShop.navigation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -17,12 +20,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.assasement.dummyShop.R
 import com.assasement.dummyShop.view.home.HomeScreen
+import com.assasement.dummyShop.view.product.ProductScreen
 import com.assasement.dummyShop.view.search.SearchScreen
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -30,6 +39,9 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     data object Search : Screen("search", "Search", Icons.Filled.Search)
     data object Cart : Screen("cart", "Cart", Icons.Filled.ShoppingCart)
     data object Profile : Screen("profile", "Profile", Icons.Filled.Person)
+    data object Product : Screen("product/{productId}", "Product", Icons.Filled.Home) {
+        fun createRoute(productId: Int) = "product/$productId"
+    }
 }
 
 private val bottomScreens = listOf(
@@ -57,12 +69,23 @@ fun AppNavGraph() {
                         NavigationBarItem(
                             selected = selected,
                             onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+                                if (selected) return@NavigationBarItem
+
+                                if (screen == Screen.Home) {
+                                    val popped = navController.popBackStack(Screen.Home.route, inclusive = false)
+                                    if (!popped) {
+                                        navController.navigate(Screen.Home.route) {
+                                            launchSingleTop = true
+                                        }
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                } else {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(Screen.Home.route) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             },
                             icon = { Icon(screen.icon, contentDescription = screen.label) },
@@ -79,10 +102,13 @@ fun AppNavGraph() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(onSearchClick = { navController.navigate(Screen.Search.route) })
+                HomeScreen(
+                    onSearchClick = { navController.navigate(Screen.Search.route) { launchSingleTop = true } },
+                    onProductClick = { productId -> navController.navigate(Screen.Product.createRoute(productId)) },
+                )
             }
             composable(Screen.Search.route) {
-                SearchScreen()
+                SearchScreen(onProductClick = { productId -> navController.navigate(Screen.Product.createRoute(productId)) })
             }
             composable(Screen.Cart.route) {
                 StubScreen()
@@ -90,18 +116,32 @@ fun AppNavGraph() {
             composable(Screen.Profile.route) {
                 StubScreen()
             }
+            composable(
+                route = Screen.Product.route,
+                arguments = listOf(navArgument("productId") { type = NavType.IntType }),
+            ) { entry ->
+                val productId = entry.arguments?.getInt("productId") ?: return@composable
+                ProductScreen(productId = productId, onBackClick = { navController.popBackStack() })
+            }
         }
     }
 }
 
 @Composable
-private fun StubScreen() {
-    Scaffold { innerPadding ->
+fun StubScreen() {
         Box(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Under construction")
+            Image(
+                painter = painterResource(R.drawable.under_construction),
+                contentDescription = null,
+                modifier = Modifier.size(250.dp)
+
+            )
         }
-    }
+
 }
+
+
+

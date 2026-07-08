@@ -1,6 +1,5 @@
 package com.assasement.dummyShop.view.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,8 +38,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,9 +55,10 @@ fun ProductCard(
     onFavoriteClick: () -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onProductClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(if (onProductClick != null) Modifier.clickable(onClick = onProductClick) else Modifier),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
@@ -94,7 +95,7 @@ fun ProductCard(
 
             Spacer(Modifier.height(10.dp))
             Text(
-                text = product.category.uppercase(Locale.getDefault()),
+                text = product.category.uppercase(LocalLocale.current.platformLocale),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
@@ -121,7 +122,7 @@ fun ProductCard(
                     ) {
                         Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(13.dp))
                         Spacer(Modifier.width(3.dp))
-                        Text(String.format(Locale.getDefault(), "%.1f", product.rating), style = MaterialTheme.typography.labelSmall)
+                        Text(String.format(LocalLocale.current.platformLocale, "%.1f", product.rating), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Spacer(Modifier.width(8.dp))
@@ -134,17 +135,25 @@ fun ProductCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "\$${String.format(Locale.US, "%.2f", product.price)}",
+                    text = $$"$$${String.format(Locale.US, "%.2f", product.price)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                IconButton(
-                    onClick = onAddClick,
+                Box(
                     modifier = Modifier
-                        .size(38.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                        .padding(horizontal = 10.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(all = 4.dp)
+                        .clickable{onAddClick()},
+
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add to cart", tint = MaterialTheme.colorScheme.onPrimary)
+                    Icon(
+                        modifier = Modifier.align(Alignment.Center)
+                            .size(22.dp),
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add to cart",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
         }
@@ -160,18 +169,39 @@ fun ProductSearchBar(
     readOnly: Boolean = false,
     placeholder: String = "Search products",
 ) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (readOnly) Modifier.clickable(onClick = onSearch) else Modifier),
-        readOnly = readOnly,
-        singleLine = true,
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-        placeholder = { Text(placeholder) },
-        shape = RoundedCornerShape(8.dp),
-    )
+    if (readOnly) {
+        Box(modifier = modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                placeholder = { Text(placeholder) },
+                shape = RoundedCornerShape(12.dp),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .testTag("readOnlySearchBarClickTarget")
+                    .clickable(onClick = onSearch),
+            )
+        }
+    } else {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = modifier
+                .fillMaxWidth()
+                .testTag("editableSearchBar"),
+            readOnly = false,
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            placeholder = { Text(placeholder) },
+            shape = RoundedCornerShape(12.dp),
+        )
+    }
 }
 
 @Composable
@@ -217,3 +247,8 @@ fun SuggestionChip(text: String, onClick: () -> Unit, modifier: Modifier = Modif
         modifier = modifier,
     )
 }
+
+
+
+
+

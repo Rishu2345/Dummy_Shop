@@ -33,9 +33,9 @@ data class ProductEntity(
     val thumbnail: String
 )
 
-@Entity(tableName = "remote_keys")
+@Entity(tableName = "remote_keys",primaryKeys = ["productId", "queryTag"])
 data class RemoteKeys(
-    @PrimaryKey val productId: Int,
+    val productId: Int,
     val prevKey: Int?,
     val nextKey: Int?,
     val queryTag: String

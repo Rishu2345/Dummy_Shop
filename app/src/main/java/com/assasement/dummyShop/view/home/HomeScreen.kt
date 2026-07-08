@@ -20,9 +20,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,6 +47,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun HomeScreen(
     onSearchClick: () -> Unit,
+    onProductClick: (Int) -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -54,32 +55,36 @@ fun HomeScreen(
     val products = viewModel.products.collectAsLazyPagingItems()
     val content = uiState as? HomeUiState.Content ?: HomeUiState.Content()
 
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            HomeHeader(
-                uiState = content,
-                onCategorySelected = viewModel::selectCategory,
-                onSearchClick = onSearchClick,
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        HomeHeader(
+            uiState = content,
+            onCategorySelected = viewModel::selectCategory,
+            onSearchClick = onSearchClick,
+        )
 
-            AnimatedContent(
-                targetState = products.loadState.refresh,
-                label = "home-refresh-state",
-            ) { refreshState ->
-                when (refreshState) {
-                    is LoadState.Loading -> FullScreenLoader()
-                    is LoadState.Error -> ErrorState(
-                        message = "Couldn't load products",
-                        onRetry = { products.retry() },
-                    )
-                    is LoadState.NotLoading -> ProductGrid(
+        AnimatedContent(
+            targetState = products.loadState.refresh,
+            label = "home-refresh-state",
+        ) { refreshState ->
+            when (refreshState) {
+                is LoadState.Loading -> FullScreenLoader()
+                is LoadState.Error -> ErrorState(
+                    message = "Couldn't load products",
+                    onRetry = { products.retry() },
+                )
+                is LoadState.NotLoading -> PullToRefreshBox(
+                    isRefreshing = products.loadState.mediator?.refresh is LoadState.Loading,
+                    onRefresh = { products.refresh() },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    ProductGrid(
                         products = products,
                         favoriteIds = favoriteIds,
                         onFavoriteClick = viewModel::toggleFavorite,
+                        onProductClick = onProductClick,
                     )
                 }
             }
@@ -93,11 +98,12 @@ private fun HomeHeader(
     onCategorySelected: (String) -> Unit,
     onSearchClick: () -> Unit,
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
         Text(
             text = "DummyShop",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(Modifier.height(12.dp))
         ProductSearchBar(
@@ -125,6 +131,7 @@ private fun ProductGrid(
     products: LazyPagingItems<ProductEntity>,
     favoriteIds: Set<Int>,
     onFavoriteClick: (Int) -> Unit,
+    onProductClick: (Int) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -143,6 +150,7 @@ private fun ProductGrid(
                     isFavorite = product.id in favoriteIds,
                     onFavoriteClick = { onFavoriteClick(product.id) },
                     onAddClick = {},
+                    onProductClick = { onProductClick(product.id) },
                 )
             }
         }
@@ -150,7 +158,7 @@ private fun ProductGrid(
     }
 }
 
-private fun LazyGridScope.appendFooter(products: LazyPagingItems<ProductEntity>) {
+fun LazyGridScope.appendFooter(products: LazyPagingItems<ProductEntity>) {
     item(span = { GridItemSpan(maxLineSpan) }) {
         when (products.loadState.append) {
             is LoadState.Loading -> Box(
@@ -171,3 +179,4 @@ private fun LazyGridScope.appendFooter(products: LazyPagingItems<ProductEntity>)
         }
     }
 }
+
